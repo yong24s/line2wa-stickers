@@ -12,6 +12,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 
@@ -24,7 +25,9 @@ import java.util.HashSet;
 import java.util.List;
 
 import static com.example.samplestickerapp.StickerContentProvider.ANDROID_APP_DOWNLOAD_LINK_IN_QUERY;
+import static com.example.samplestickerapp.StickerContentProvider.ANIMATED_STICKER_PACK;
 import static com.example.samplestickerapp.StickerContentProvider.AVOID_CACHE;
+import static com.example.samplestickerapp.StickerContentProvider.IMAGE_DATA_VERSION;
 import static com.example.samplestickerapp.StickerContentProvider.IOS_APP_DOWNLOAD_LINK_IN_QUERY;
 import static com.example.samplestickerapp.StickerContentProvider.LICENSE_AGREENMENT_WEBSITE;
 import static com.example.samplestickerapp.StickerContentProvider.PRIVACY_POLICY_WEBSITE;
@@ -36,7 +39,6 @@ import static com.example.samplestickerapp.StickerContentProvider.STICKER_PACK_I
 import static com.example.samplestickerapp.StickerContentProvider.STICKER_PACK_IDENTIFIER_IN_QUERY;
 import static com.example.samplestickerapp.StickerContentProvider.STICKER_PACK_NAME_IN_QUERY;
 import static com.example.samplestickerapp.StickerContentProvider.STICKER_PACK_PUBLISHER_IN_QUERY;
-import static com.example.samplestickerapp.StickerContentProvider.IMAGE_DATA_VERSION;
 
 class StickerPackLoader {
 
@@ -105,7 +107,8 @@ class StickerPackLoader {
             final String licenseAgreementWebsite = cursor.getString(cursor.getColumnIndexOrThrow(LICENSE_AGREENMENT_WEBSITE));
             final String imageDataVersion = cursor.getString(cursor.getColumnIndexOrThrow(IMAGE_DATA_VERSION));
             final boolean avoidCache = cursor.getShort(cursor.getColumnIndexOrThrow(AVOID_CACHE)) > 0;
-            final StickerPack stickerPack = new StickerPack(identifier, name, publisher, trayImage, publisherEmail, publisherWebsite, privacyPolicyWebsite, licenseAgreementWebsite, imageDataVersion, avoidCache);
+            final boolean animatedStickerPack = cursor.getShort(cursor.getColumnIndexOrThrow(ANIMATED_STICKER_PACK)) > 0;
+            final StickerPack stickerPack = new StickerPack(identifier, name, publisher, trayImage, publisherEmail, publisherWebsite, privacyPolicyWebsite, licenseAgreementWebsite, imageDataVersion, avoidCache, animatedStickerPack);
             stickerPack.setAndroidPlayStoreLink(androidPlayStoreLink);
             stickerPack.setIosAppStoreLink(iosAppLink);
             stickerPackList.add(stickerPack);
@@ -125,7 +128,11 @@ class StickerPackLoader {
             do {
                 final String name = cursor.getString(cursor.getColumnIndexOrThrow(STICKER_FILE_NAME_IN_QUERY));
                 final String emojisConcatenated = cursor.getString(cursor.getColumnIndexOrThrow(STICKER_FILE_EMOJI_IN_QUERY));
-                stickers.add(new Sticker(name, Arrays.asList(emojisConcatenated.split(","))));
+                List<String> emojis = new ArrayList<>(StickerPackValidator.EMOJI_MAX_LIMIT);
+                if (!TextUtils.isEmpty(emojisConcatenated)) {
+                    emojis = Arrays.asList(emojisConcatenated.split(","));
+                }
+                stickers.add(new Sticker(name, emojis));
             } while (cursor.moveToNext());
         }
         if (cursor != null) {
