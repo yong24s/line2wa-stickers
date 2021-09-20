@@ -33,8 +33,8 @@ def download(working_dir, links, url):
     if len(links) <= 30:
         download_folder = str(uuid.uuid5(uuid.NAMESPACE_URL, url))
         folder = working_dir + os.sep + download_folder
-        save(folder, links, url)
-        return list(download_folder)
+        save(folder, links, url)        
+        return [download_folder]
     
     download_folder1 = str(uuid.uuid5(uuid.NAMESPACE_URL, url + '_111'))
     folder = working_dir + os.sep + download_folder1
